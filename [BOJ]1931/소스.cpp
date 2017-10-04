@@ -1,41 +1,42 @@
+//1931: 회의실 배정
+
 #include <iostream>
-#include <queue>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
 int main() {
-	int meetings;
-	int answer;
-	//(끝나는 시간, 시작 시간)
-	priority_queue<pair<int, int>> pq;
+	int N;
+	vector<pair<int, int>> meetings;
+	int answer = 1;
 
-		cin >> meetings;
+	cin >> N;
 
-		answer = 0;
-		pq = priority_queue<pair<int, int>>();
-		
-		for (int i = 0; i < meetings; i++) {
-			int start, end;
+	meetings = vector<pair<int, int>>(N);
 
-			cin >> start >> end;
-			pq.push(make_pair(-end, start));
+	for (int i = 0; i < N; i++) {
+		int startTime, endTime;
+
+		cin >> startTime >> endTime;
+
+		meetings[i] = { endTime, startTime };
+	}
+
+	sort(meetings.begin(), meetings.end());
+
+	int meetingStartTime = meetings[0].second;
+	int meetingEndTime = meetings[0].first;
+
+	for (int i = 1; i < N; i++) {
+		if (meetingEndTime <= meetings[i].second) {
+			meetingStartTime = meetings[i].second;
+			meetingEndTime = meetings[i].first;
+			answer++;
 		}
+	}
 
-		int preEnd = -pq.top().first;
-		int preStart = pq.top().second;
-		answer++;
+	cout << answer;
 
-		for (int i = 1; i <= meetings; i++) {
-			int endTime = -pq.top().first;
-			int startTime = pq.top().second;
-			pq.pop();
-
-			if (startTime >= preEnd) {
-				answer++;
-				preEnd = endTime;
-				preStart = startTime;
-			}
-		}
-
-		cout << answer;
+	return 0;
 }
