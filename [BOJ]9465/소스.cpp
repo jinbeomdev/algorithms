@@ -46,7 +46,7 @@ int main() {
 
 	for (int test_case = 0; test_case < T; test_case++) {
 		memset(stickers, 0, sizeof(stickers));
-		memset(dp, 0, size(dp));
+		memset(dp, 0, sizeof(dp));
 
 		cin >> n;
 		for (int i = 0; i < 2; i++) {
