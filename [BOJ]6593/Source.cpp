@@ -52,28 +52,31 @@ Trapped!
 #include <queue>
 #include <algorithm>
 
-class {
-	int l;
-	int r;
-	int c;
-public:
-
-};
-
 int dfs(int l, int r, int c, int dist);
-int bfs();
+void bfs();
 
 int iter_l[] = { 0, -1, 1 };
 int iter_r[] = { 0, 1, 0, -1 };
 int iter_c[] = { 1, 0, -1, 0 };
 
+//!!-------------------------------------------------------------!!/
+//!!-------------------------------------------------------------!!/
+//variable for dfs
 std::pair<int, std::pair<int, int>> start;
 std::pair<int, std::pair<int, int>> end;
 
 std::vector<std::vector<std::vector<char>>> adj;
 std::vector<std::vector<std::vector<bool>>> visited;
+//!!-------------------------------------------------------------!!/
+//!!-------------------------------------------------------------!!/
 
-std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
+//!!-------------------------------------------------------------!!/
+//!!-------------------------------------------------------------!!/
+//variable for bfs
+std::vector<std::vector<std::vector<int>>> dist;
+//!!-------------------------------------------------------------!!/
+//!!-------------------------------------------------------------!!/
+
 
 int L, R, C;
 
@@ -82,7 +85,8 @@ int main() {
 		scanf("%d %d %d", &L, &R, &C);
 		
 		adj = std::vector<std::vector<std::vector<char>>>(L, std::vector<std::vector<char>>(R, std::vector<char>(C)));
-		visited = std::vector<std::vector<std::vector<bool>>>(L, std::vector<std::vector<bool>>(R, std::vector<bool>(C, false)));
+		//visited = std::vector<std::vector<std::vector<bool>>>(L, std::vector<std::vector<bool>>(R, std::vector<bool>(C, false)));
+		dist = std::vector<std::vector<std::vector<int>>>(L, std::vector<std::vector<int>>(R, std::vector<int>(C, -1)));
 
 		if (L == 0 && R == 0 && C == 0) {
 			break;
@@ -105,12 +109,20 @@ int main() {
 		}
 		
 		//int ret = dfs(start.first, start.second.first, start.second.second, 0);
-		int ret = bfs();
+		bfs();
 
+		/* dfs
 		if(ret > 0)
 			printf("Escaped in %d minute(s).", ret);
 		else
 			printf("Trapped!");
+		*/
+
+		/*bfs*/
+		if (dist[end.first][end.second.first][end.second.second] > 0)
+			printf("Escaped in %d minute(s).\n", dist[end.first][end.second.first][end.second.second]);
+		else
+			printf("Trapped!\n");
 	}
 }
 
@@ -148,7 +160,6 @@ int dfs(int l, int r, int c, int dist)
 				visited[next_l][next_r][next_c] = true;
 
 				ret = std::max(ret, dfs(next_l, next_r, next_c, dist + 1));
-
 			}
 		}
 	}
@@ -156,9 +167,52 @@ int dfs(int l, int r, int c, int dist)
 	return ret;
 }
 
-int bfs()
+void bfs()
 {
-	
+	std::queue<std::pair<int, std::pair<int, int>>> q;
 
-	return 0;
+	q.push({ start.first, { start.second.first, start.second.second} });
+	dist[start.first][start.second.first][start.second.second] = 0;
+
+	while (!q.empty()) {
+		int l = q.front().first;
+		int r = q.front().second.first;
+		int c = q.front().second.second;
+		q.pop();
+		
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 4; j++) {
+				int next_l;
+				int next_r;
+				int next_c;
+				if (i == 0) {
+					next_l = l;
+					next_r = r + iter_r[j];
+					next_c = c + iter_c[j];
+				}
+				else {
+					next_l = l + iter_l[i];
+					next_c = c;
+					next_r = r;
+				}
+
+				if (next_l >= 0 && next_l < L &&
+					next_r >= 0 && next_r < R &&
+					next_c >= 0 && next_c < C &&
+					dist[next_l][next_r][next_c] < 0 && //there isn't visited not yet
+					adj[next_l][next_r][next_c] != '#') {
+					dist[next_l][next_r][next_c] = dist[l][r][c] + 1;
+
+					//if find 'End' location, quit the function. 
+					if (end.first == next_l &&
+						end.second.first == next_r &&
+						end.second.second == next_c) {
+						return;
+					}
+
+					q.push({ next_l , { next_r, next_c} });
+				}
+			}
+		}
+	}
 }
