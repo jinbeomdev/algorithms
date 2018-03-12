@@ -53,11 +53,22 @@ vector<pair<int, int>> core_locations;
 
 pair<int, int> directions[] = { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
 
-int dfs(int core_index, int total_length) {
-	int ret = INF;
+void compare_two_pair(pair<int, int> &a, pair<int, int> &b) {
+	if (a.first < b.first) {
+		a = b;
+	}
 
-	if (core_index = core_locations.size() - 1) {
-		return total_length;
+	if (a.first == b.first) {
+		a.second = min(b.second, a.second);
+	}
+}
+
+pair<int, int> dfs(int core_index, int num_connected_core, int total_length) {
+	pair<int, int> ret = { -INF, INF };
+	pair<int, int> temp;
+
+	if (core_index == core_locations.size()) {
+		return { num_connected_core, total_length };
 	}
 
 	for (int i = 0; i < 4; i++) {
@@ -67,8 +78,8 @@ int dfs(int core_index, int total_length) {
 		int x = core_locations[core_index].second;
 
 		int length = 0;
-			
-		while (y == 0 || x == 0 || y == N -1 || x == N - 1) {
+
+		while (y != 0 && x != 0 && y != N - 1 && x != N - 1) {
 			y = y + directions[i].first;
 			x = x + directions[i].second;
 
@@ -83,18 +94,25 @@ int dfs(int core_index, int total_length) {
 		}
 
 		if (!is_cross) {
-			dfs(core_index + 1, total_length + length);
-			visited[y][x] = false;
+			temp = dfs(core_index + 1, num_connected_core + 1, total_length + length);
+			compare_two_pair(ret, temp);
 		}
 
-		while (y == core_locations[core_index].first && x == core_locations[core_index].second) {
-			y = y + directions[(i + 2) % 4].first;
-			x = x + directions[(i + 2) % 4].second;
+		y = core_locations[core_index].first;
+		x = core_locations[core_index].second;
+
+		for (int j = 0; j < (is_cross ? length - 1 : length); j++) {
+			y = y + directions[i].first;
+			x = x + directions[i].second;
 
 			visited[y][x] = false;
 		}
-
 	}
+	
+	temp = dfs(core_index + 1, num_connected_core, total_length);
+	compare_two_pair(ret, temp);
+
+	return ret;
 }
 
 int main() {
@@ -106,6 +124,8 @@ int main() {
 		cin >> N;
 
 		core_locations.clear();
+		memset(adj, 0, sizeof(adj));
+		memset(visited, false, sizeof(visited));
 
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
@@ -118,7 +138,11 @@ int main() {
 			}
 		}
 
-		int result;
-		cout << "#" << test_case << " " << result << endl;
+		pair<int, int> result = dfs(0, 0, 0);
+		cout << "#" << test_case << " " <<result.second << endl;
 	}
+
+	//system("pause");
+
+	return 0;
 }
