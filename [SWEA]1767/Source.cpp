@@ -118,10 +118,12 @@ pair<int, int> dfs(int core_index, int num_connected_core, int total_length) {
 int main() {
 	int T, test_case;
 
-	cin >> T;
+	//cin >> T;
+	scanf("%d", &T);
 
 	for (test_case = 1; test_case <= T; test_case++) {
-		cin >> N;
+		//cin >> N;
+		scanf("%d", &N);
 
 		core_locations.clear();
 		memset(adj, 0, sizeof(adj));
@@ -129,7 +131,8 @@ int main() {
 
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
-				cin >> adj[i][j];
+				//cin >> adj[i][j];
+				scanf("%d", &adj[i][j]);
 
 				if (adj[i][j] == 1) {
 					core_locations.push_back({ i, j });
@@ -139,7 +142,9 @@ int main() {
 		}
 
 		pair<int, int> result = dfs(0, 0, 0);
-		cout << "#" << test_case << " " <<result.second << endl;
+		//cout << "#" << test_case << " " <<result.second << endl;
+		printf("%c%d%c%d\n",
+			'#', test_case, ' ', result.second);
 	}
 
 	//system("pause");

@@ -28,10 +28,12 @@ N개의 도시가 P개의 양방향 길로 연결되어 있다. 이석원은 1번 도시와 2번 도시 사이�
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <cstring>
 
 using namespace std;
 
-const int MAX = 800;
+const int MAX = 805;
+const int INF = 10e9;
 
 struct Edge {
 	int to, c, f;
@@ -72,8 +74,8 @@ int main() {
 
 		u--; v--;
 
-		Edge *e1 = new Edge(u * 2, 1);
-		Edge *e2 = new Edge(v * 2, 1);
+		Edge *e1 = new Edge(v * 2, 1);
+		Edge *e2 = new Edge(u * 2, 1);
 		e1->dual = e2;
 		e2->dual = e1;
 		adj[u * 2 + 1].push_back(e1);
@@ -83,6 +85,49 @@ int main() {
 	int total = 0, S = 1, E = 2;
 	while (true) {
 		int prev[MAX];
+		Edge *path[MAX] = { nullptr };
+		queue<int> q;
 
+		memset(prev, -1, sizeof(prev));
+		
+		q.push(S);
+		
+		while (!q.empty()) {
+			int curr = q.front();
+			q.pop();
+
+			for (Edge *e : adj[curr]) {
+				int next = e->to;
+			
+				if(e->spare() > 0 && prev[next] == -1) {
+					q.push(next);
+					prev[next] = curr;
+					path[next] = e;
+					
+					if (next == E) {
+						break;
+					}
+				}
+			}
+		}
+
+		if (prev[E] == -1) {
+			break;
+		}
+
+		int flow = INF;
+
+		for (int i = E; i != S; i = prev[i]) {
+			flow = min(flow, path[i]->spare());
+		}
+
+		for (int i = E; i != S; i = prev[i]) {
+			path[i]->addFlow(flow);
+		}
+		total += flow;
 	}
+
+	cout << total;
+
+	//system("pause");
 }
