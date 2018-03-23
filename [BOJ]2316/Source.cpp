@@ -75,11 +75,18 @@ int main() {
 		u--; v--;
 
 		Edge *e1 = new Edge(v * 2, 1);
+		Edge *inverse_e1 = new Edge(u * 2 + 1, 0);
 		Edge *e2 = new Edge(u * 2, 1);
-		e1->dual = e2;
-		e2->dual = e1;
+		Edge *inverse_e2 = new Edge(v * 2 + 1, 0);
+		
+		e1->dual = inverse_e1;
+		inverse_e1->dual = e1;
+		e2->dual = inverse_e2;
+		inverse_e2->dual = e2;
 		adj[u * 2 + 1].push_back(e1);
+		adj[v * 2].push_back(inverse_e1);
 		adj[v * 2 + 1].push_back(e2);
+		adj[u * 2].push_back(inverse_e2);
 	}
 
 	int total = 0, S = 1, E = 2;
