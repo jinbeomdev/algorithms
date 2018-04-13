@@ -32,3 +32,41 @@
 4
 8
 */
+
+#include <iostream>
+
+using namespace std;
+
+int main() {
+	const int SINK = 0, TARGET = 51;
+	
+	int T;
+	int adj[52][52]; //Added 2 spaces more for s, t.
+
+	cin >> T;
+
+	for (int test_case = 0; test_case < T; test_case++) {
+		int n, m;
+		
+		cin >> n >> m;
+
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < m; j++) {
+				bool row_is_odd;
+				bool col_is_odd;
+				int num;
+
+				if (i % 2 == 0) row_is_odd = true;
+				else row_is_odd = false;
+				
+				if (j % 2 == 0) col_is_odd = true;
+				else row_is_odd = false;
+
+				
+				cin >> num;
+
+
+			}
+		}
+	}
+}
