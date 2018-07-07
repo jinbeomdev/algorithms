@@ -10,21 +10,26 @@ const int iter_y[] = { -1, 0, 1, 0 };
 struct POSITION {
 	int x, y;
 	bool is_destroyed;
+	int dist;
 
-	POSITION(int x_, int y_, bool is_destroyed_) :
-		x(x_), y(y_), is_destroyed(is_destroyed_) { }
+	POSITION(int x_, int y_, bool is_destroyed_, int dist_) :
+		x(x_), y(y_), is_destroyed(is_destroyed_), dist(dist_) { }
 };
+
+bool operator<(POSITION const &lhs, POSITION const &rhs) {
+	return lhs.dist < rhs.dist;
+}
 
 int N, M;
 vector<vector<int>> adj;
-vector<vector<bool>> visited;
-queue<POSITION> q;
+vector<vector<int>> dist;
+priority_queue<POSITION> pq;
 
 int main() {
 	scanf("%d%d", &N, &M);
 
 	adj.resize(N, vector<int>(M, 0));
-	visited.resize(N, vector<bool>(M, false));
+	dist.resize(N, vector<int>(M, 1e9));
 
 	for (int i = 0; i < adj.size(); i++) {
 		for (int j = 0; j < adj[j].size(); j++) {
@@ -40,53 +45,41 @@ int main() {
 		}
 	}
 
-	q.push(POSITION(0, 0, false));
-	visited[0][0] = true;
+	pq.push(POSITION(0, 0, false, -1));
+	dist[0][0] = 1;
 
-	int depth = 1;
-	bool is_arrived = false;
-	while (!q.empty()) {
-		int q_size = q.size();
+	while (!pq.empty()) {
+			int here_x = pq.top().x;
+			int here_y = pq.top().y;
+			bool here_is_destroyed = pq.top().is_destroyed;
+			int here_dist = -pq.top().dist;
+			pq.pop();
 
-		for (int i = 0; i < q_size; i++) {
-			int here_x = q.front().x;
-			int here_y = q.front().y;
-			bool here_is_destroyed = q.front().is_destroyed;
-			q.pop();
-
-			if (here_x == M - 1 && here_y == N - 1) {
-				is_arrived = true;
-				break;
-			}
+			if (dist[here_y][here_x] < here_dist) continue;
 
 			for (int j = 0; j < 4; j++) {
 				int next_x = here_x + iter_x[j];
 				int next_y = here_y + iter_y[j];
+				int next_dist = here_dist + 1;
 
 				if (next_x < 0 || next_x >= M ||
 						next_y < 0 || next_y >= N) {
 					continue;
 				}
 
-
-				if (!visited[next_y][next_x]) {
-					if (adj[next_y][next_x] == 0) {
-						visited[next_y][next_x] = true;
-						q.push(POSITION(next_x, next_y, here_is_destroyed));
-					} else if (here_is_destroyed == false) {
-						visited[next_y][next_x] = true;
-						q.push(POSITION(next_x, next_y, true));
-					}
+				if (dist[next_y][next_x] < next_dist) continue;
+				
+				if (adj[next_y][next_x] == 0) {
+					dist[next_y][next_x] = next_dist;
+					pq.push(POSITION(next_x, next_y, here_is_destroyed, -next_dist));
+				} else if (here_is_destroyed == false) {
+					dist[next_y][next_x] = next_dist;
+					pq.push(POSITION(next_x, next_y, true, -next_dist));
 				}
-			}
 		}
-
-		if (is_arrived) break;
-
-		depth++;
 	}
 
-	printf("%d", depth);
+	printf("%d", dist[N-1][M-1]);
 }
 
 /*
