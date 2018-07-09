@@ -2,6 +2,8 @@
 #include <queue>
 #include <vector>
 
+#include <cassert>
+
 using namespace std;
 
 const int iter_x[] = { 0, 1, 0, -1 };
@@ -10,82 +12,106 @@ const int iter_y[] = { -1, 0, 1, 0 };
 struct POSITION {
 	int x, y;
 	bool is_destroyed;
-	int dist;
 
-	POSITION(int x_, int y_, bool is_destroyed_, int dist_) :
-		x(x_), y(y_), is_destroyed(is_destroyed_), dist(dist_) { }
+	POSITION(int x_, int y_, bool is_destroyed_) :
+		x(x_), y(y_), is_destroyed(is_destroyed_) {
+	}
 };
-
-bool operator<(POSITION const &lhs, POSITION const &rhs) {
-	return lhs.dist < rhs.dist;
-}
 
 int N, M;
 vector<vector<int>> adj;
-vector<vector<int>> dist;
-priority_queue<POSITION> pq;
+vector<vector<bool>> visited[2];
+queue<POSITION> q;
+
+int bool2int(bool b) {
+	if (b) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+bool int2bool(int i) {
+	if (i) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
 int main() {
 	scanf("%d%d", &N, &M);
 
 	adj.resize(N, vector<int>(M, 0));
-	dist.resize(N, vector<int>(M, 1e9));
+	visited[0].resize(N, vector<bool>(M, false));
+	visited[1].resize(N, vector<bool>(M, false));
 
 	for (int i = 0; i < adj.size(); i++) {
-		for (int j = 0; j < adj[j].size(); j++) {
-			char c;
-			scanf("%c", &c);
-
-			if (c == '\n') {
-				j--;
-				continue;
-			}
-
-			adj[i][j] = (int)(c - '0');
+		for (int j = 0; j < adj[i].size(); j++) {
+			scanf("%1d", &adj[i][j]);
 		}
 	}
 
-	pq.push(POSITION(0, 0, false, -1));
-	dist[0][0] = 1;
+	q.push(POSITION(0, 0, false));
+	visited[0][0][0] = true;
 
-	while (!pq.empty()) {
-			int here_x = pq.top().x;
-			int here_y = pq.top().y;
-			bool here_is_destroyed = pq.top().is_destroyed;
-			int here_dist = -pq.top().dist;
-			pq.pop();
+	int depth = 1;
+	bool is_arrived = false;
+	while (!q.empty()) {
+		int q_size = q.size();
 
-			if (dist[here_y][here_x] < here_dist) continue;
+		for (int i = 0; i < q_size; i++) {
+			int here_x = q.front().x;
+			int here_y = q.front().y;
+			int here_is_destroyed = bool2int(q.front().is_destroyed);
+			q.pop();
+
+			if (here_x == M - 1 && here_y == N - 1) {
+				is_arrived = true;
+				break;
+			}
 
 			for (int j = 0; j < 4; j++) {
 				int next_x = here_x + iter_x[j];
 				int next_y = here_y + iter_y[j];
-				int next_dist = here_dist + 1;
 
 				if (next_x < 0 || next_x >= M ||
-						next_y < 0 || next_y >= N) {
+					next_y < 0 || next_y >= N) {
 					continue;
 				}
 
-				if (dist[next_y][next_x] < next_dist) continue;
-				
-				if (adj[next_y][next_x] == 0) {
-					dist[next_y][next_x] = next_dist;
-					pq.push(POSITION(next_x, next_y, here_is_destroyed, -next_dist));
-				} else if (here_is_destroyed == false) {
-					dist[next_y][next_x] = next_dist;
-					pq.push(POSITION(next_x, next_y, true, -next_dist));
+
+				if (!visited[here_is_destroyed][next_y][next_x]) {
+					if (adj[next_y][next_x] == 0) {
+						visited[here_is_destroyed][next_y][next_x] = true;
+						q.push(POSITION(next_x, next_y, int2bool(here_is_destroyed)));
+					} else if (int2bool(here_is_destroyed) == false) {
+						visited[1][next_y][next_x] = true;
+						q.push(POSITION(next_x, next_y, true));
+					}
 				}
+			}
 		}
+
+		if (is_arrived) break;
+
+		depth++;
 	}
 
-	printf("%d", dist[N-1][M-1]);
+	if (is_arrived) {
+		printf("%d", depth);
+	} else {
+		printf("-1");
+	}
 }
 
 /*
-	시간 초과
-	완전 탐색은 시간 초과가 발생함.
-	가지치기를 해서 불필요한 탐색은 안하도록 해야할 듯
-	아마도 다익스트라로 접근해야하나봄.
-	다익스트라로 접근하면 더 짧은 경로가 있을 경우 무시하기 때문에 모든 경로를 탐색하지 않음
+	이 문제를 틀렸던 이유는 벽을 부수고 지나간 경로가 벽을 부수지 않은 경로에 영향을 미친다
+	(부수고 지나간 경로가 visited[i][j]을 true로 하기 때문에 벽을 부수지 않은 경로는 해당 경로를 지나갈 수 없게 댐)
+	그렇기 때문에 visted 배열을 벽을 부순 경우와 부수지 않은 경우로 케이스를 나누어서 관리를 해야했다.
+
+	핵심 원리는 어떤 경로로 x,y에 도달하든지는 상관 없다. 그 이유는 현재 최소 경로를 찾고 있고
+	x, y에 도달했을 때는 최소 경로로 도달했음.
+	하지만 x, y에 도달했을 때 벽을 부순 여부가 다음 경로에 영향을 미치기 때문에 visited 배열을 따로 관리 해야함.
+	말이 주저리 주저리 길어짐
 */
