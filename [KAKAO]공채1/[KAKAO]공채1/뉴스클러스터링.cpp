@@ -1,74 +1,66 @@
 #include <string>
-#include <set>
 #include <algorithm>
-#include <vector>
 
 using namespace std;
 
-string getElement(const string &s, int i) {
-	char a = tolower(s[i]);
-	char b = tolower(s[i + 1]);
-	return string(1, a) + string(1, b);
-}
-
-bool IsAlpha(const string &s, int i) {
-	if (!isalpha(s[i]) || !isalpha(s[i + 1])) return false;
-	return true;
-}
-
-int solution2(string str1, string str2) {
-
-}
-
 int solution(string str1, string str2) {
-	multiset<string> str1_set;
-	multiset<string> str2_set;
+	int set_str1[676] = {};
+	int set_str2[676] = {};
+
+	transform(str1.begin(), str1.end(), str1.begin(), ::tolower);
+	transform(str2.begin(), str2.end(), str2.begin(), ::tolower);
 
 	int i = 0;
 	int j = 0;
-	while (i < str1.size() - 1 || j < str2.size() - 1) {
-		if (IsAlpha(str1, i)) {
-			str1_set.insert(getElement(str1, i));
+	int index;
+	while (i < str1.size() -1 && j < str2.size() - 1) {
+		if (isalpha(str1[i]) && isalpha(str1[i + 1])) {
+			index = (str1[i] - 'a') * 26 + (str1[i + 1] - 'a');
+			set_str1[index]++;
 		}
 
-		if (IsAlpha(str2, j)) {
-			str2_set.insert(getElement(str2, j));
+		if (isalpha(str2[j]) && isalpha(str2[j+ 1])) {
+			index = (str2[j] - 'a') * 26 + (str2[j + 1] - 'a');
+			set_str2[index]++;
 		}
+
 		i++;
 		j++;
 	}
 
 	while (i < str1.size() - 1) {
-		if (IsAlpha(str1, i)) {
-			str1_set.insert(getElement(str1, i));
+		if (isalpha(str1[i]) && isalpha(str1[i + 1])) {
+			index = (str1[i] - 'a') * 26 + (str1[i + 1] - 'a');
+			set_str1[index]++;
 		}
+
 		i++;
 	}
 
 	while (j < str2.size() - 1) {
-		if (IsAlpha(str2, j)) {
-			str1_set.insert(getElement(str2, j));
+		if (isalpha(str2[j]) && isalpha(str2[j + 1])) {
+			index = (str2[j] - 'a') * 26 + (str2[j + 1] - 'a');
+			set_str2[index]++;
 		}
+
 		j++;
 	}
 
-	if (str1_set.size() == 0 && str2_set.size() == 0) {
+	int num_union = 0;
+	int num_intersection = 0;
+
+	for (int i = 0; i < 676; i++) {
+		num_union += max(set_str1[i], set_str2[i]);
+		num_intersection += min(set_str1[i], set_str2[i]);
+	}
+
+	if (num_union == 0) {
 		return 65536;
 	}
 
-	vector<string> v(str1_set.size());
-	vector<string>::iterator it;
-
-	it = set_intersection(str1_set.begin(), str1_set.end(), str2_set.begin(), str2_set.end(), v.begin());
-	v.resize(it - v.begin());
-	
-	int num_intersection = v.size();
-	int num_union = str1_set.size() + str2_set.size() - num_intersection;
-
-	double ret = (double)num_intersection / (double)num_union * 65536;
-	return (int)ret;
+	return (int)(((double)num_intersection / (double)num_union) * 65536.0);
 }
 
 int main() {
-	printf("%d", solution("aaa", "aaaa"));
+	solution(string("zasdasdasdasdasdz"), string("zzasdasdasda"));
 }
