@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <vector>
+#include <queue>
 #include <algorithm>
 
 using namespace std;
@@ -8,22 +8,24 @@ const int dx[] = { 0, 1, 1, 1, 0, -1, -1, -1 };
 const int dy[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
 struct Tree {
+	int r, c;
 	int age;
-	bool alive;
-	int year_dead;
 
-	Tree(int age_) : age(age_), alive(true) {}
+	Tree(int r_, int c_, int age_) : r(r_), c(c_), age(age_) {}
 };
 
-bool Comp(const Tree &a, const Tree &b) {
-	return a.age < b.age;
-}
+class Comp {
+public:
+	bool operator() (Tree lhs, Tree rhs) {
+		return lhs.age > rhs.age;
+	}
+};
 
 int main() {
 	int N, M, K;
 	int A[10][10];
 	int land[10][10];
-	vector<Tree> trees[10][10];
+	vector<Tree> trees;
 
 	//fill(&land[0][0], &land[0][0] + sizeof(land), 5);
 	for (int i = 0; i < 10; i++) {
@@ -45,58 +47,49 @@ int main() {
 
 		scanf("%d%d%d", &r, &c, &age);
 
-		trees[r - 1][c - 1].push_back(Tree(age));
+		trees.push_back(Tree(r - 1, c - 1, age));
 	}
+
 
 	for (int year = 0; year < K; year++) {
 		//봄
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++) {
-				sort(trees[i][j].begin(), trees[i][j].end(), Comp);
+		priority_queue<Tree, vector<Tree>, Comp> pq;
+		vector<Tree> trees_dead;
+		
+		for (int i = 0; i < trees.size(); i++) {
+			pq.push(trees[i]);
+		}
 
-				for (int k = 0; k < trees[i][j].size(); k++) {
-					if (trees[i][j][k].alive == false) continue;
+		trees.clear();
 
-					if (trees[i][j][k].age > land[i][j]) {
-						trees[i][j][k].alive = false;
-						trees[i][j][k].year_dead = year;
-						continue;
-					}
+		while(!pq.empty()) {
+			Tree tree = pq.top();
+			pq.pop();
 
-					land[i][j] -= trees[i][j][k].age;
-					trees[i][j][k].age++;
-				}
-			} 
+			if (tree.age > land[tree.r][tree.c]) {
+				trees_dead.push_back(tree);
+				continue;
+			}
+
+			land[tree.r][tree.c] -= tree.age;
+			trees.push_back(Tree(tree.r, tree.c, tree.age + 1));
 		}
 
 		//여름
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++) {
-				for (int k = 0; k < trees[i][j].size(); k++) {
-					if (trees[i][j][k].alive) continue;
-
-					if (trees[i][j][k].year_dead != year) continue;
-
-					land[i][j] += trees[i][j][k].age / 2;
-				}
-			}
+		for (Tree tree : trees_dead) {
+			land[tree.r][tree.c] += (tree.age / 2);
 		}
-
+	
 		//가을
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++) {
-				for (int k = 0; k < trees[i][j].size(); k++) {
-					if (trees[i][j][k].alive == false) continue;
+		int tree_size = trees.size();
+		for (int i = 0; i < tree_size; i++) {
+			if (trees[i].age % 5 != 0) continue;
+			
+			for (int d = 0; d < 8; d++) {
+				if (trees[i].r + dy[d] < 0 || trees[i].r + dy[d] >= N ||
+					trees[i].c + dx[d] < 0 || trees[i].c + dx[d] >= N) continue;
 
-					if (trees[i][j][k].age % 5 != 0) continue;
-
-					for (int d = 0; d < 8; d++) {
-						if (i + dy[d] < 0 || i + dy[d] >= N ||
-							  j + dx[d] < 0 || j + dx[d] >= N) continue;
-
-						trees[i + dy[d]][j + dx[d]].push_back(Tree(1));
-					}
-				}
+				trees.push_back(Tree(trees[i].r + dy[d], trees[i].c + dx[d], 1));
 			}
 		}
 
@@ -108,16 +101,9 @@ int main() {
 		}
 	}
 
-	int ret = 0;
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
-			for (int k = 0; k < trees[i][j].size(); k++) {
-				if (trees[i][j][k].alive) ret++;
-			}
-		}
-	}
-
-	printf("%d", ret);
+	printf("%d", trees.size());
 
 	return 0;
 }
+
+//정렬 내림차순 오름차순을 주의하자.
