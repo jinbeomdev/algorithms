@@ -66,8 +66,8 @@ int main() {
 			for (int j = 0; j < N; j++) {
 				scanf("%d%d", &map[i][j][0], &map[i][j][1]);
 			}
-			} else {
-				for (int j = 0; j < N - 1; j++) {
+		} else {
+			for (int j = 0; j < N - 1; j++) {
 				scanf("%d%d", &map[i][j][0], &map[i][j][1]);
 			}
 		}
