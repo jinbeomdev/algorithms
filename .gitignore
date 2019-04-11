@@ -382,3 +382,5 @@ __pycache__/
 .history
 
 # End of https://www.gitignore.io/api/c++,visualstudiocode
+.vscode/launch.json
+.vscode/tasks.json
