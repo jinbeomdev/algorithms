@@ -57,7 +57,7 @@ int main() {
                 if(map[next_y][next_x] == '*') break;
                 if(map[next_y][next_x] == '!' || map[next_y][next_x] == '#') {
                     adj[i].push_back(location_idx[next_y][next_x]);
-                    printf("%d %d\n", i, location_idx[next_y][next_x]);
+                    //printf("%d %d\n", i, location_idx[next_y][next_x]);
                 }
                 next_y += dy[j];
                 next_x += dx[j];
