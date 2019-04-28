@@ -19,7 +19,7 @@ public:
 
     ~Trie() {
         for(int i = 0 ; i < 26; i++) {
-            if(!children[i]) delete children[i];
+            if(children[i]) delete children[i];
         }
     }
 
