@@ -61,12 +61,6 @@ int main() {
     char str[31];
     cntOfWords = 0;
     Trie *root = new Trie();
-    /*
-    while(scanf("%[^\n]%*c", str)) {
-        cntOfWords++;
-        root->insert(str, str);
-    }
-    */
     
     int T;
     scanf("%d%*c", &T);
