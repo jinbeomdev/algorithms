@@ -1,162 +1,199 @@
-#ifndef NULL
-#define NULL 0
-#endif  // NULL
 
-#include <stdio.h>
+int N, M;
 
-inline int min(const int lhs, const int rhs) { return lhs < rhs ? lhs : rhs; }
-inline int max(const int lhs, const int rhs) { return lhs < rhs ? rhs : lhs; }
+inline long long int min(const long long int &lhs, const long long int &rhs) {
+  return lhs < rhs ? lhs : rhs;
+}
+inline long long int max(const long long int &lhs, const long long int &rhs) {
+  return lhs < rhs ? rhs : lhs;
+}
 
 struct Data {
   int row;
   int col;
-  Data *next;
-};
+  int encode;
 
-const int MAX_N = 1000;
-const int MAX_M = 20;
-const int HASH_TABLE_SIZE = 10001;
+  bool operator<(const Data &rhs) const { return encode < rhs.encode; }
+} _data[1000 * 1000];
+int dataSize;
+int isSorted;
+int (*copiedAp)[1000];
 
-int N;
-int M;
-int (*copiedAp)[MAX_N];
+void swap(Data &lhs, Data &rhs) {
+  Data temp = lhs;
+  lhs = rhs;
+  rhs = temp;
+}
 
-Data *hashTable[HASH_TABLE_SIZE];
+int partition(int low, int high) {
+  Data pivot = _data[high];  // pivot
+  int i = (low - 1);         // Index of smaller element
 
-Data dataSegment[MAX_N * MAX_N * 2];
-int dataSegmentSize;
+  for (int j = low; j <= high - 1; j++) {
+    // If current element is smaller than or
+    // equal to pivot
+    if (_data[j].encode <= pivot.encode) {
+      i++;  // increment index of smaller element
+      swap(_data[i], _data[j]);
+    }
+  }
+  swap(_data[i + 1], _data[high]);
+  return (i + 1);
+}
 
-Data *getData(int r, int c) {
-  dataSegment[dataSegmentSize].row = r;
-  dataSegment[dataSegmentSize].col = c;
-  return &dataSegment[dataSegmentSize++];
+/* The main function that implements QuickSort
+ arr[] --> Array to be sorted,
+  low  --> Starting index,
+  high  --> Ending index */
+void quickSort(int low, int high) {
+  if (low < high) {
+    /* pi is partitioning index, arr[p] is now
+       at right place */
+    int pi = partition(low, high);
+
+    // Separately sort elements before
+    // partition and after partition
+    quickSort(low, pi - 1);
+    quickSort(pi + 1, high);
+  }
+}
+
+long long int encode(int bp[][20]) {
+  long long int encode[4] = {0};
+
+  for (int p = 0; p < M; p++) {
+    for (int q = 0; q < M; q++) {
+      encode[0] = encode[0] * 2 + ((bp[p][q] == 9) ? 1 : bp[p][q]);  // 0
+      encode[1] = encode[1] * 2 +
+                  ((bp[M - 1 - q][p] == 9) ? 1 : bp[M - 1 - q][p]);  // 90
+      encode[2] = encode[2] * 2 + ((bp[M - 1 - p][M - 1 - q] == 9)
+                                       ? 1
+                                       : bp[M - 1 - p][M - 1 - q]);  // 180;
+      encode[3] = encode[3] * 2 +
+                  ((bp[q][M - 1 - p] == 9) ? 1 : bp[q][M - 1 - p]);  // 270;
+    }
+  }
+
+  long long ret = encode[0];
+
+  for (int i = 1; i < 4; i++) {
+    ret = min(ret, encode[i]);
+  }
+
+  return ret;
 }
 
 void init(int n, int ap[][1000], int m) {
   N = n;
   M = m;
+  dataSize = 0;
+  isSorted = false;
   copiedAp = ap;
-  dataSegmentSize = 0;
 
-  long long int maskLow = (1 << m) - 1;
-  long long int maskHigh = ((1 << 2 * m) - 1) - maskLow;
-
-  for (int i = 0; i < HASH_TABLE_SIZE; i++) hashTable[i] = NULL;
   for (int i = 0; i <= n - m; i++) {
-    long long int key = 0;
-    long long int keyLow = 0;
-    long long int keyHigh = 0;
-    for (int j = 0; j < m - 1; j++) {
-      keyLow = (keyLow << 1) + (long long int)ap[i][j];
-      keyHigh = (keyHigh << 1) | ((long long int)ap[i + m - 1][j] << m);
-    }
+    for (int j = 0; j <= n - m; j++) {
+      int bp[20][20];
 
-    for (int j = m - 1; j < n; j++) {
-      keyLow = ((keyLow << 1) + (long long int)ap[i][j]) & maskLow;
-      keyHigh =
-          ((keyHigh << 1) + ((long long int)ap[i + m - 1][j] << m)) & maskHigh;
-      key = keyHigh | keyLow;
+      for (int p = 0; p < m; p++) {
+        for (int q = 0; q < m; q++) {
+          bp[p][q] = ap[i + p][j + q];
+        }
+      }
 
-      Data *data = getData(i, j - m + 1);
-      data->next = hashTable[key % HASH_TABLE_SIZE];
-      hashTable[key % HASH_TABLE_SIZE] = data;
+      _data[dataSize].row = i;
+      _data[dataSize].col = j;
+      _data[dataSize++].encode = encode(bp);
     }
   }
 }
 
-bool isMatched(int r, int c, int bp[][20], int rotate, int userAns[], int nineR,
-               int nineC) {
-  for (int i = 0; i < M; i++) {
-    for (int j = 0; j < M; j++) {
-      if (rotate == 0) {
-        if (bp[i][j] != copiedAp[i + r][j + c]) return false;
-        if (i == nineR && j == nineC) {
-          userAns[2] = i + r;
-          userAns[3] = j + c;
+void find(const Data &data, int &r, int &c, int &rotate, int bp[][20]) {
+  bool var1, var2, var3, var4;
+  var1 = var2 = var3 = var4 = true;
+
+  int userAns[4][2];
+
+  for (int p = 0; p < M; p++) {
+    for (int q = 0; q < M; q++) {
+      if (bp[p][q] == 9) {
+        bp[p][q] = 1;
+        r = p + data.row;
+        c = p + data.col;
+      } else if (bp[M - 1 - q][p] == 9) {
+        bp[p][q] = 1;
+        r = p + data.row;
+        c = p + data.col;
+      } else if (bp[M - 1 - p][M - 1 - q] == 9) {
+        bp[p][q] = 1;
+        r = p + data.row;
+        c = p + data.col;
+      } else if (bp[q][M - 1 - p] == 9) {
+        bp[p][q] = 1;
+        r = p + data.row;
+        c = p + data.col;
+      }
+
+      if (var1) {
+        if (bp[p][q] != copiedAp[p + data.row][q + data.col]) {
+          var1 = false;
         }
-      } else if (rotate == 1) {
-        if (bp[M - 1 - j][i] != copiedAp[i + r][j + c]) return false;
-        if (M - 1 - j == nineR && i == nineC) {
-          userAns[2] = i + r;
-          userAns[3] = j + c;
+      } else if (var2) {
+        if (bp[M - 1 - q][p] != copiedAp[p + data.row][q + data.col]) {
+          var2 = false;
         }
-      } else if (rotate == 2) {
-        if (bp[M - 1 - i][M - 1 - j] != copiedAp[i + r][j + c]) return false;
-        if (M - 1 - i == nineR && M - 1 - j == nineC) {
-          userAns[2] = i + r;
-          userAns[3] = j + c;
+      } else if (var3) {
+        if (bp[M - 1 - p][M - 1 - q] != copiedAp[p + data.row][q + data.col]) {
+          var3 = false;
         }
-      } else if (rotate == 3) {
-        if (bp[j][M - 1 - i] != copiedAp[i + r][j + c]) return false;
-        if (j == nineR && M - 1 - i == nineC) {
-          userAns[2] = i + r;
-          userAns[3] = j + c;
+      } else if (var4) {
+        if (bp[q][M - 1 - p] != copiedAp[p + data.row][q + data.col]) {
+          var4 = false;
         }
-      } else
-        ;  //...
+      } else {
+        return;
+      }
     }
   }
 
-  return true;
+  if (var1) {
+    rotate = 0;
+  } else if (var2) {
+    rotate = 1;
+  } else if (var3) {
+    rotate = 2;
+  } else {
+    rotate = 3;
+  }
+
+  return;
 }
 
 int query(int bp[][20], int userAns[]) {
-  int rotateDegree = 0;
-
-  int nineR, nineC;
-  for (int i = 0; i < M; i++) {
-    for (int j = 0; j < M; j++) {
-      if (bp[i][j] == 9) {
-        bp[i][j] = 1;
-        nineR = i;
-        nineC = j;
-      }
-    }
+  if (!isSorted) {
+    quickSort(0, dataSize - 1);
+    isSorted = true;
   }
+  int row = 0, col = 0;
 
-  long long int key[4] = {0};
-  long long int keyLow[4] = {0};
-  long long int keyHigh[4] = {0};
+  int left = 0, right = dataSize - 1, mid;
+  int key = encode(bp);
 
-  for (int i = 0; i < M; i++) {
-    keyLow[0] = (keyLow[0] << 1) + (long long int)bp[0][i];  // 0
-    keyHigh[0] = (keyHigh[0] << 1) + ((long long int)bp[M - 1][i] << M);
+  while (left <= right) {
+    mid = (left + right) / 2;
 
-    keyLow[1] = (keyLow[1] << 1) + (long long int)bp[M - 1 - i][0];  // 90
-    keyHigh[1] = (keyHigh[1] << 1) + ((long long int)bp[M - 1 - i][M - 1 - i]);
-
-    keyLow[2] = (keyLow[2] << 1) + (long long int)bp[M - 1][M - 1 - i];  // 180
-    keyHigh[2] = (keyHigh[2] << 1) + ((long long int)bp[0][M - 1 - i] << M);
-
-    keyLow[3] = (keyLow[3] << 1) + (long long int)bp[i][M - 1];  // 270
-    keyHigh[3] = (keyHigh[3] << 1) + ((long long int)bp[0][M - 1] << M);
-  }
-
-  key[0] = keyHigh[0] | keyLow[0];
-  key[1] = keyHigh[1] | keyLow[1];
-  key[2] = keyHigh[2] | keyLow[2];
-  key[3] = keyHigh[3] | keyLow[3];
-
-  for (int i = 0; i < 4; i++) {
-    Data *data = hashTable[key[i] % HASH_TABLE_SIZE];
-    bool isAnswerFinded = false;
-
-    while (data != NULL) {
-      if (isMatched(data->row, data->col, bp, i, userAns, nineR, nineC)) {
-        userAns[0] = data->row;
-        userAns[1] = data->col;
-        rotateDegree = i;
-        isAnswerFinded = true;
-        break;
-      }
-
-      data = data->next;
-    }
-
-    if (isAnswerFinded) {
+    if (key < _data[mid].encode) {
+      right = mid - 1;
+    } else if (key > _data[mid].encode) {
+      left = mid + 1;
+    } else {
       break;
     }
   }
 
-  return rotateDegree;
+  userAns[0] = _data[mid].col;
+  userAns[1] = _data[mid].col;
+
+  int rotate;
+  find(_data[mid], userAns[2], userAns[3], rotate, bp);
+  return rotate;
 }
