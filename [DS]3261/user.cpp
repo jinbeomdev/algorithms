@@ -61,7 +61,7 @@ int isEgg(int y, int x) {
 int getEggCount(int tick) {
     int etime = stime + tick, i, j, ny, nx;
     data *tmp;
-    for (i = 0; i < an; i++) {
+    for (i = 0, j = 0; i < an; i++) {
         if(map[now[i].y][now[i].x] == ctime) now[j++] = now[i];
     }
     an = j;
@@ -84,6 +84,6 @@ int getEggCount(int tick) {
         an = bn;
         ctime++;
     }
-    
+
     return an;
 }
