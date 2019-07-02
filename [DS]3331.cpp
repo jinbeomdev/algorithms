@@ -1,154 +1,181 @@
-#include <assert.h>
 #include <stdio.h>
-#include <algorithm>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
-int T;
-int queries;
-int ct;
+const int UID = 1001;
+const int PID = 100001;
 
 struct Post {
+  int postId;
+  bool uesrs[UID];
+  int likeCnt;
   int timeStamp;
-  int like;
 
-  Post() : timeStamp(0), like(0) {}
-  Post(int _timeStamp) : timeStamp(_timeStamp), like(0) {}
-} post[100010];
-
-struct User {
-  vector<int> posts;
-  vector<int> follows;
-
-  User() : posts(vector<int>()), follows(vector<int>()) {}
-} user[1010];
-
-bool comp(const int &lhs, const int &rhs) {
-  if (post[lhs].like == post[rhs].like) {
-    return post[lhs].timeStamp > post[rhs].timeStamp;
+  void push(int _postId, int _uid, int _timeStamp) {
+    postId = _postId;
+    uesrs[_uid] = true;
+    timeStamp = _timeStamp;
+    likeCnt = 0;
   }
-  return post[lhs].like > post[rhs].like;
+
+  bool operator< (const Post lhs) const {
+    if(likeCnt == lhs.likeCnt) return timeStamp > lhs.timeStamp;
+    return likeCnt > lhs.likeCnt;
+  }
+};
+
+Post postArr[PID];
+int postSize;
+
+vector<int> uesrPostArr[UID];
+vector<int> uesrFollowingArr[UID];
+
+int ct;
+
+void cmd0() {
+  ct = 0;
+  postSize = 0;
+  for(int i = 0; i < UID; i++) {
+    uesrPostArr[i].clear();
+    uesrFollowingArr[i].clear();
+  }
 }
 
-bool comp2(const int &lhs, const int &rhs) {
-  return post[lhs].timeStamp > post[rhs].timeStamp;
+void cmd1() {
+  int uid, pid, timeStamp;
+  scanf("%d%d%d", &uid, &pid, &timeStamp);
+  pid--;
+  postArr[postSize++].push(pid, uid, timeStamp);
+  uesrPostArr[uid].push_back(pid);
+
+  ct = timeStamp;
 }
 
-void debug() {
-  printf("\n%10s%10s%10s\n%30s\n", "postId", "timestamp", "like",
-         "---------------");
+void cmd2() {
+  int pid;
+  scanf("%d", &pid);
+  pid--;
+  postArr[pid].likeCnt++;
+}
 
-  for (int i = 0; i < 100010; i++) {
-    if (post[i].timeStamp > 0)
-      printf("%10d%10d%10d\n", i, post[i].timeStamp, post[i].like);
+void cmd3() {
+  int sid, tid;
+  scanf("%d%d", &sid, &tid);
+  uesrFollowingArr[sid].push_back(tid);
+}
+
+bool comp(const Post *lhs, const Post *rhs) {
+  if(lhs->likeCnt == rhs->likeCnt) {
+    return lhs->timeStamp > rhs->timeStamp;
   }
+  return lhs->likeCnt > rhs->likeCnt;
+}
+
+void printAnswer(int ret[], int retSize) {
+  printf("%d", retSize);
+  for(int i = 0; i < retSize; i++) {
+    printf(" %d", ret[i]);
+  }
+  puts("");
+}
+
+void cmd4() {
+  int uid, timeStamp;
+  scanf("%d%d", &uid, &timeStamp);
+  
+  for(int i = 0; i < uesrFollowingArr[uid].size(); i++) {
+      for(int j = 0; j < uesrPostArr[uesrFollowingArr[uid][i]].size(); j++) {
+          postArr[uesrPostArr[uesrFollowingArr[uid][i]][j]].uesrs[uid] = true;
+      }
+  }
+
+  ct = timeStamp;
+
+  int ret[10];
+  int retSize = 0;
+  
+  Post *ptrPost[1002];
+  int ptrPostSize = 0;
+
+  int postIdx = postSize;
+  while(--postIdx >= 0 && postArr[postIdx].timeStamp >= ct - 1000) {
+    //printf("postArr[%d].timeStamp : %d\n", postIdx, postArr[postIdx].timeStamp);
+    if(!(ptrPostSize < 1002)) break;
+    if(!postArr[postIdx].uesrs[uid]) continue;
+
+    ptrPost[ptrPostSize++] = &postArr[postIdx];
+  }
+  
+  sort(ptrPost, ptrPost + ptrPostSize, comp);
+
+  for(int i = 0; i < ptrPostSize && i < 10; i++) {
+    ret[retSize++] = ptrPost[i]->postId + 1;
+  }
+
+  if(retSize == 10) {
+    printAnswer(ret, retSize);
+    return;
+  }
+
+  postIdx++;
+  while (--postIdx >= 0) {
+    if(!(retSize < 10)) break;
+    if(!postArr[postIdx].uesrs[uid]) continue;
+
+    ret[retSize++] = postIdx;
+  }
+
+  if(retSize == 0) {
+    printf("1 0\n");
+    return;
+  }
+
+  printAnswer(ret, retSize);
+  return;
+}
+
+void getQuery() {
+  int type;
+
+  scanf("%d", &type);
+
+  if(type == 0) {
+    cmd0();
+    return;
+  }
+
+  if(type == 1) {
+    cmd1();
+    return;
+  }
+
+  if(type == 2) {
+    cmd2();
+    return;
+  }
+
+  if(type == 3) {
+    cmd3();
+    return;
+  }
+
+  if(type == 4) {
+    cmd4();
+    return;
+  }
+
 }
 
 int main() {
+  int T;
+
   scanf("%d", &T);
+  for(int tc = 1; tc <= T; tc++) {
+    int n;
+    scanf("%d", &n);
 
-  for (int tc = 0; tc < T; tc++) {
-    scanf("%d", &queries);
-    ct = 0;
-    for (int i = 0; i < 100010; i++) {
-      if (i < 1010) {
-        user[i] = User();
-      }
-      post[i] = Post();
-    }
-
-    for (int query = 0; query < queries; query++) {
-      // debug();
-      int cmd;
-      int uid, pid, timestamp, sid, tid;
-      vector<int> postsCanBeRead;
-      scanf("%d", &cmd);
-
-      switch (cmd) {
-        case 0:
-          ct = 0;
-          assert(false);
-          break;
-        case 1:
-          scanf("%d%d%d", &uid, &pid, &timestamp);
-          ct = timestamp;
-          post[pid] = Post(timestamp);
-          user[uid].posts.push_back(pid);
-          break;
-        case 2:
-          scanf("%d", &pid);
-          post[pid].like++;
-          break;
-        case 3:
-          scanf("%d%d", &sid, &tid);
-          user[sid].follows.push_back(tid);
-          break;
-        case 4:
-          scanf("%d%d", &uid, &timestamp);
-          ct = timestamp;
-          for (int i = 0; i < user[uid].posts.size(); i++) {
-            if (post[user[uid].posts[i]].timeStamp > ct - 1000 &&
-                post[user[uid].posts[i]].timeStamp <= ct) {
-              postsCanBeRead.push_back(user[uid].posts[i]);
-            }
-          }
-          for (int i = 0; i < user[uid].follows.size(); i++) {
-            for (int j = 0; j < user[user[uid].follows[i]].posts.size(); j++) {
-              if (post[user[user[uid].follows[i]].posts[j]].timeStamp >
-                      ct - 1000 &&
-                  post[user[user[uid].follows[i]].posts[j]].timeStamp <= ct) {
-                postsCanBeRead.push_back(user[user[uid].follows[i]].posts[j]);
-              }
-            }
-          }
-
-          if (postsCanBeRead.size() < 10) {
-            vector<int> extraPosts;
-            int extra = 10 - postsCanBeRead.size();
-
-            for (int i = 0; i < user[uid].posts.size(); i++) {
-              if (post[user[uid].posts[i]].timeStamp > ct - 1000)
-                extraPosts.push_back(user[uid].posts[i]);
-            }
-
-            for (int i = 0; i < user[uid].follows.size(); i++) {
-              for (int j = 0; j < user[user[uid].follows[i]].posts.size();
-                   j++) {
-                if (post[user[user[uid].follows[i]].posts[j]].timeStamp >
-                    ct - 1000)
-                  extraPosts.push_back(user[user[uid].follows[i]].posts[j]);
-              }
-            }
-
-            sort(extraPosts.begin(), extraPosts.end(), comp2);
-
-            for (int i = 0; i < extraPosts.size() && i < extra; i++) {
-              postsCanBeRead.push_back(extraPosts[i]);
-            }
-          }
-
-          if (postsCanBeRead.empty()) {
-            printf("1 0\n");
-            break;
-          } else {
-            sort(postsCanBeRead.begin(), postsCanBeRead.end(), comp);
-            printf("%d ",
-                   ((postsCanBeRead.size() > 10) ? 10 : postsCanBeRead.size()));
-            for (int i = 0;
-                 i <
-                 ((postsCanBeRead.size() > 10) ? 10 : postsCanBeRead.size());
-                 i++) {
-              printf("%d ", postsCanBeRead[i]);
-            }
-            puts("");
-            break;
-          }
-          break;
-        default:
-          // exception
-          break;
-      }
-    }
+    for(int i = 0; i < n; i++) getQuery();
   }
 }
