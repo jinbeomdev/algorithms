@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <queue>
-#include <algorithm>
 
 using namespace std;
 
@@ -12,7 +11,40 @@ typedef pair<int, int> pii;
 const int MAXN = (int)1e5 + 10;
 const int INF = (int)1e8;
 
-int depth[MAXN][MAXN];
+vector<int> adj[MAXN];
+bool discovered[MAXN];
+bool discovered2[MAXN];
+
+
+int getDistance(int from, int to, const vector<int> adj[MAXN]) {
+    queue<pii> q;
+    q.push(make_pair(from , 0));
+
+    memset(discovered2, false, sizeof(discovered2));
+    discovered2[from] = true;
+
+
+    while(!q.empty()) {
+        int here = q.front().first;
+        int distance = q.front().second;
+        q.pop();
+
+        if(here == to) {
+            return distance;
+        }
+
+        for (int i = 0; i < adj[here].size(); i++) {
+            int next = adj[here][i];
+            
+            if (discovered2[next]) continue;
+
+            discovered2[next] = true;
+            q.push(make_pair(next, distance + 1));
+        }
+    }
+
+    return INF;
+}
 
 int main() {
     int TC;
@@ -20,15 +52,12 @@ int main() {
     scanf("%d", &TC);
 
     for (int tc = 1; tc <= TC; tc++) {
-        vector<int> adj[MAXN];
         int N;
         
         scanf("%d", &N);
 
-        for (int i = 0; i <= N; i++) {
-            for (int j = 0; j <= N; j++) {
-                depth[i][j] = ((i == j) ? 0 : INF);
-            }
+        for(int i = 1; i <= N; i++) {
+            adj[i].clear();
         }
 
         for (int n = 2; n <= N; n++) {
@@ -36,20 +65,8 @@ int main() {
             scanf("%d", &parent);
             adj[parent].push_back(n);
             adj[n].push_back(parent);
-            depth[parent][n] = 1;
-            depth[n][parent] = 1;
         }
 
-        depth[0][1] = 0;
-        for (int k = 1; k <= N; k++) {
-            for (int i = 1; i <= N; i++) {
-                for (int j = 1; j <= N; j++) {
-                    depth[i][j] = min(depth[i][j], depth[i][k] + depth[k][j]);
-                }
-            }
-        }
-
-        bool discovered[MAXN];
         queue<int> q;
         memset(discovered, false, sizeof(discovered));
         
@@ -57,15 +74,13 @@ int main() {
         q.push(1);
 
         int distance = 0;
-        int prevNode = 0;
+        int prevNode = 1;
         while (!q.empty()) {
             int here = q.front();
             q.pop();
 
-            printf("bfs => from(%d) -> here(%d)\n", prevNode, here);
-
-            distance += depth[prevNode][here];
-            printf("bfs => depth[%d][%d](%d)\n", prevNode, here, depth[prevNode][here]);
+            int temp = getDistance(prevNode, here, adj);
+            distance += temp;
             prevNode = here;
 
             for (int i = 0; i < adj[here].size(); i++) {
