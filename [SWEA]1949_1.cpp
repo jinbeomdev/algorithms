@@ -26,11 +26,11 @@ struct Data {
 };
 
 int dfs(Data here) {
-    printf("here => y(%d), x(%d), length(%d), cut(%s)\n",
-    here.y,
-    here.x,
-    here.length,
-    here.cut ? "true" : "false");
+    // printf("here => y(%d), x(%d), length(%d), cut(%s)\n",
+    // here.y,
+    // here.x,
+    // here.length,
+    // here.cut ? "true" : "false");
 
     int maxLength = here.length;
 
@@ -50,10 +50,13 @@ int dfs(Data here) {
             if(K < diff + 1) continue;
             
             visited[nextY][nextX] = true;
+            int temp = map[nextY][nextX];
+            map[nextY][nextX] -= diff + 1;
             maxLength = 
                 max(maxLength,
                     dfs(Data(nextY, nextX, here.length + 1, true)));
             visited[nextY][nextX] = false;
+            map[nextY][nextX] = temp;
             continue;
         }
 
