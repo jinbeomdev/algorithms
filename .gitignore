@@ -381,4 +381,7 @@ __pycache__/
 # Ignore all local history of files
 .history
 
+### private proplem
+\[DS\]*/
+
 # End of https://www.gitignore.io/api/c++,visualstudiocode
