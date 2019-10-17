@@ -4,7 +4,7 @@
 
 using namespace std;
 
-const int MAX = 200000;
+const int MAX = 200010;
 
 int uf[MAX];
 
@@ -38,27 +38,28 @@ struct Edge {
 } edge[MAX];
 
 int main() {
-    int m, n;
-    int total = 0;
-    scanf("%d%d", &m, &n);
-    fill(uf, uf + MAX, -1);
-    for (int i = 0; i < n; i++) {
-        int u, v, w;
-        scanf("%d%d%d", &u, &v, &w);
-        edge[i] = Edge(u, v, w);
-        total += w;
-    }
-    sort(edge, edge + n);
-    int result = 0, cnt = 0;
-    for (int i = 0; i < n; i++) {
-        if(merge(edge[i].u, edge[i].v)) {
-            cnt++;
-            result += edge[i].w;
-            if (cnt == m - 1) break;
+    while(true) {
+        int m, n;
+        int total = 0;
+        scanf("%d%d", &m, &n);
+        if (m == 0 && n == 0) break;
+        fill(uf, uf + m, -1);
+        for (int i = 0; i < n; i++) {
+            int u, v, w;
+            scanf("%d%d%d", &u, &v, &w);
+            edge[i] = Edge(u, v, w);
+            total += w;
         }
+        sort(edge, edge + n);
+        int result = 0, cnt = 0;
+        for (int i = 0; i < n; i++) {
+            if(merge(edge[i].u, edge[i].v)) {
+                cnt++;
+                result += edge[i].w;
+                if (cnt == m - 1) break;
+            }
+        }
+        printf("%d\n", total - result);
     }
-    printf("%d", total - result);
-    int tmp1, tmp2;
-    scanf("%d%d", &tmp1, &tmp2);
     return 0;
 }
