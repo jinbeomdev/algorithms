@@ -4,6 +4,7 @@
 
 using namespace std;
 
+//입력 상한 값을 조심하자
 const int NMAX = 100010;
 const int MMAX = 1000010;
 
